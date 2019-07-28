@@ -2,6 +2,7 @@ import requests as r
 import json
 import time
 import datetime
+import os
 from fake_useragent import UserAgent
 
 #--- wireless module only works in linux ---#
@@ -25,11 +26,17 @@ ticker = "krw-btc"
 from_ = "2013-04-10 00:00:00"
 to_ = "2019-07-28 00:00:00"
 
+
+dataSaveFolder = "./minutesData"
 dataSaveFile = "./minutesData/"+ticker+".csv"
 
+if not os.path.isdir(dataSaveFolder):
+    os.mkdir(dataSaveFolder)
+    
 #--- wifi initializing ---#
-wire.connect(ssid=wifi[1], password= pw[1])
-time.sleep(3)
+if linux:
+    wire.connect(ssid=wifi[1], password= pw[1])
+    time.sleep(3)
 
 #--- session initializing ---#
 session = r.Session()
@@ -71,31 +78,33 @@ def COOKIE_UPDATE():
 
 
 #--- time out decorator ---#
-from functools import wraps
-import errno
-import os
-import signal
+# it also only works for linux
+if linux:
+    from functools import wraps
+    import errno
+    import os
+    import signal
 
-class TimeoutError(Exception):
-    pass
+    class TimeoutError(Exception):
+        pass
 
-def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
-    def decorator(func):
-        def _handle_timeout(signum, frame):
-            raise TimeoutError(error_message)
+    def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+        def decorator(func):
+            def _handle_timeout(signum, frame):
+                raise TimeoutError(error_message)
 
-        def wrapper(*args, **kwargs):
-            signal.signal(signal.SIGALRM, _handle_timeout)
-            signal.alarm(seconds)
-            try:
-                result = func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
-            return result
+            def wrapper(*args, **kwargs):
+                signal.signal(signal.SIGALRM, _handle_timeout)
+                signal.alarm(seconds)
+                try:
+                    result = func(*args, **kwargs)
+                finally:
+                    signal.alarm(0)
+                return result
 
-        return wraps(func)(wrapper)
+            return wraps(func)(wrapper)
 
-    return decorator
+        return decorator
 
 
 
@@ -103,7 +112,8 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 
 searchBaseUrl = "https://api.upbit.com/v1/candles/minutes/1?market="+ticker+"&to={Y}-{M}-{D}T{h}:{m}:{s}Z&count=200"
 
-@timeout(10)
+
+# @timeout(10) if you use linux, use it.
 def GET_200_MINS_DATA(Y_, M_, D_, h_, m_, s_):
     '''
     Y_:year(str)
@@ -139,6 +149,7 @@ def CSV_APPEND(data):
 
 
 if __name__ == "__main__":
+    print("start")
     startDate = datetime.datetime.strptime(to_, "%Y-%m-%d %H:%M:%S")
     endDate = datetime.datetime.strptime(from_, "%Y-%m-%d %H:%M:%S")
 
@@ -147,11 +158,12 @@ if __name__ == "__main__":
     if linux:
         wifiCount=0
     while(processDate > endDate):
-        print("{}days data are saved".format((count*200)/(24*60))
+        print("{}days data are saved".format((count*200)/(24*60)))
         while True: # If Get method returns Error, it updates cookie and try again until it success 
             try:
                 data = GET_200_MINS_DATA(processDate.strftime('%Y'), processDate.strftime('%m'),   processDate.strftime('%d'), processDate.strftime('%H'), processDate.strftime('%M'), processDate.strftime('%S'))
-            except:
+            except Exception as ex:
+                print(ex)
                 COOKIE_UPDATE()
                 time.sleep(1)
                 pass
