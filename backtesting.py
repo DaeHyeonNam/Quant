@@ -92,9 +92,9 @@ def SIMULATION(baseData,buyFilter, sellFilter, buyFunc, sellFunc, commission= Tr
                 buyYPoint.append(int(baseData[i+1:i+2][key]))
                 coinNum, moneyLeft = buy(buyRate, int(baseData[i+1:i+2][key]), coinNum, moneyLeft)
             else:
+                print("Sell {} rate:{}".format(i, sellRate))
                 sellXPoint.append(i+1)
                 sellYPoint.append(int(baseData[i+1:i+2][key]))
-                print("Sell {} rate:{}".format(i, sellRate))
                 coinNum, moneyLeft =sell(sellRate, int(baseData[i+1:i+2][key]), coinNum, moneyLeft)
 
     # money left at the last and calculate interest rate
