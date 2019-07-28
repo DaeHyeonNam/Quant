@@ -111,8 +111,9 @@ def SIMULATION(baseData,buyFilter, sellFilter, buyFunc, sellFunc, commission= Tr
     
     plt.figure(figsize = (15,10))
     plt.plot(Xdata,Ydata)
-    plt.scatter(buyXPoint,buyYPoint, color='r')
-    plt.scatter(sellXPoint,sellYPoint, color='b')
+    b = plt.scatter(buyXPoint,buyYPoint, color='r', label="buy point")
+    s = plt.scatter(sellXPoint,sellYPoint, color='b', label="sell point")
+    plt.legend((b,s),('buy point', 'sell point'))
     plt.show()
     
     
